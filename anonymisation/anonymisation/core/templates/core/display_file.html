@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+<head>
+    <meta charset="utf-8">
+    <title>Display File</title>
+</head>
+
+{% block content %}
+    {% if not name %}
+        <p>There's no schema in the .sql file</p>
+    {% elif not schema %}
+        <p>The schema is invalid in the .sql file</p>
+    {% else %}
+        {% load get_key_index %}
+        {% load get_items_index %}
+        <form action="{% url 'download' %}" method="post">
+            {% for s in schema %}
+                {% with n=name|get_key_index:forloop.counter0 %}
+                    <h2>{{ n }}</h2>
+                    {% for table in s %}
+                        <input type="checkbox" name={{ n }} value={{ forloop.counter0 }} checked>
+                        {{ s|get_items_index:forloop.counter0 }}
+                    {% endfor %}
+                {% endwith %}
+            {% endfor %}
+            <button type="submit">send</button>
+        </form>
+    {% endif %}
+
+   <form action="{% url 'home' %}">
+       <button>Home</button>
+   </form>
+{% endblock %}
