@@ -1,3 +1,4 @@
+import time
 import re
 
 
@@ -49,11 +50,9 @@ class TableSpec:
         print("| name: " + str(self.name))
         print("| group : " + str(self.group))
         print("| type: " + str(self.type))
-        print("| auto_increment: " + str(self.auto_increment))
         print("| precision: " + str(self.precision))
         print("| scale: " + str(self.scale))
         print("| params: " + str(self.params))
-        print("| enum: " + str(self.enum))
 
 
 def var_type(str_s):
@@ -173,10 +172,12 @@ def text_split_1(text):
 
 
 def prepare_change(change, table):
+    start = time.time()
     type_to_change = {}
     for c in change.keys():
-        for t in table.keys():
+        for t in table:
             if c == t:
                 type_to_change[c] = send_change_class(text_split_1(table[t]), change[c], c)
                 break
+    print("func: prepare_change = " + str(time.time() - start))
     return clean_type(type_to_change)

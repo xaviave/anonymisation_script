@@ -5,11 +5,11 @@ import copy
 from functools import reduce
 
 
-def send_file(doc):
-    with open(doc) as fd:
-        sql_file = fd.read()
+def send_file(document):
+    with document.document.file.open() as fd:
+        file = fd.read()
         fd.close()
-    return sql_file
+        return file.decode('utf-8')
 
 
 def var_line(line):
@@ -110,8 +110,8 @@ def clear_schema(schema):
     return s
 
 
-def send_schema(create, insert):
-    sql_file = send_file(sys.argv[1]).split(';')
+def send_schema(document, create, insert):
+    sql_file = send_file(document).split(';')
     for i in range(len(sql_file)):
         m = create.search(sql_file[i])
         m2 = insert.search(sql_file[i])
@@ -151,14 +151,14 @@ def change_to_dict(dic, schema):
     return change
 
 
-def send_change(schema):
+def send_change(schema, lst_change):
     param = []
     dic = {}
     keys = [key for key in schema.keys()]
     for key in keys:
         param.append([schema[key][p] for p in schema[key].keys()])
-    for i in range(2, len(sys.argv)):
-        m = re.search(r"^(?P<s_name>.+):(?P<param>.+)$", sys.argv[i])
+    for i in range(len(lst_change)):
+        m = re.search(r"^(?P<s_name>.+):(?P<param>.+)$", lst_change[i])
         if m:
             if m.group('s_name') in keys:
                 ok = 0
@@ -178,7 +178,7 @@ def send_change(schema):
             else:
                 print("Invalid PARAMETER ( " + m.group('s_name') + " ) doesn't exist as a table's name")
                 sys.exit(2)
-    if not dic:
-        print("SCHEMA and PARAMETER can't be empty")
-        sys.exit(2)
+        else:
+            print("SCHEMA and PARAMETER can't be empty")
+            sys.exit(2)
     return change_to_dict(dic, schema)

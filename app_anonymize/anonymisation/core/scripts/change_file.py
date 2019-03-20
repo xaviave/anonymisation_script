@@ -1,11 +1,12 @@
 from faker import Faker
-from sql_parse import send_name
+from os.path import join
+from anonymisation.settings import MEDIA_ROOT
+from anonymisation.core.scripts.sql_parse import send_name
 
 import random
 import string
-import os
-import sys
 import re
+import os
 
 
 def handle_error(pos, length, param, fake, gender):
@@ -196,7 +197,7 @@ def text_to_change(s, type_to_change, fake, insert):
     return new_file
 
 
-def change_file(type_to_change, sql_file, insert):
+def change_file(type_to_change, sql_file, name_file, insert):
     new_file = ""
     fake = Faker('fr_FR')
     for i, s in enumerate(sql_file):
@@ -216,8 +217,17 @@ def change_file(type_to_change, sql_file, insert):
                 new_file += s
         else:
             new_file += s
-    path = os.path.realpath(sys.argv[1])[:-4] + "_anonymize.sql"
-    with open(path, 'wb') as f:
-        f.write(bytes(new_file, 'utf-8'))
-        f.close()
-    return
+    path = ""
+    try:
+        os.mkdir(MEDIA_ROOT + "/anonymised_files")
+    except OSError:
+        pass
+    try:
+        path = join(MEDIA_ROOT, "anonymised_files/")
+        path = join(path, name_file)
+        with open(path, 'wb') as f:
+            f.write(bytes(new_file, 'utf-8'))
+            f.close()
+    except OSError:
+        print("Error while tryinge to create/write the file")
+    return path

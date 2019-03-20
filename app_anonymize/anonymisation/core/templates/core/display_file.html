@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+<head>
+    <meta charset="utf-8">
+    <title>Display File</title>
+</head>
+
+{% block content %}
+    {% if not schema %}
+        <p>The schema is invalid in the .sql file</p>
+    {% else %}
+        {% load get_items %}
+        <form action="{% url 'download' doc_id %}" method="post">
+            {% for s in schema %}
+                <h3> {{ s }} </h3>
+                {% with table=schema|get_items:s %}
+                    {# creer un form qui me permet d avoir le docid popur la suite #}
+                    {% for t in table %}
+                        {{ table|get_items:t }}
+                        <input type="checkbox" name={{ s }} value={{ table|get_items:t }} checked>
+                    {% endfor %}
+                {% endwith %}
+            {% endfor %}
+            <button type="submit">send</button>
+        </form>
+    {% endif %}
+
+    <form action="{% url 'home' %}">
+        <button>Home</button>
+    </form>
+{% endblock %}
