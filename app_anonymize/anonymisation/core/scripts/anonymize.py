@@ -11,8 +11,11 @@ import re
 def dict_to_list(lst_change):
     change = []
     for name in lst_change:
-        for table in lst_change[name]:
-            change.append("%s:%s" % (name, table))
+        if isinstance(lst_change[name], list):
+            for table in lst_change[name]:
+                change.append("%s:%s" % (name, table))
+        elif isinstance(lst_change[name], str):
+                change.append("%s:%s" % (name, lst_change[name]))
     return change
 
 
