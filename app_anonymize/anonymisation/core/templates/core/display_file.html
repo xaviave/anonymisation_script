@@ -1,31 +1,122 @@
-{% extends 'base.html' %}
-
+{% load static %}
 <head>
     <meta charset="utf-8">
+    <link href="{% static 'core/button.css' %}" rel="stylesheet">
+    <link href="https://www.w3schools.com/w3css/4/w3.css" rel="stylesheet">
+    <link href="https://www.w3schools.com/lib/w3-colors-metro.css" rel="stylesheet">
+    <link href="https://www.w3schools.com/lib/w3-colors-flat.css" rel="stylesheet">
     <title>Display File</title>
 </head>
 
-{% block content %}
-    {% if not schema %}
-        <p>The schema is invalid in the .sql file</p>
-    {% else %}
-        {% load get_items %}
-        <form action="{% url 'download' doc_id %}" method="post">
-            {% for s in schema %}
-                <h3> {{ s }} </h3>
-                {% with table=schema|get_items:s %}
-                    {# creer un form qui me permet d avoir le docid popur la suite #}
-                    {% for t in table %}
-                        {{ table|get_items:t }}
-                        <input type="checkbox" name={{ s }} value={{ table|get_items:t }} checked>
-                    {% endfor %}
-                {% endwith %}
-            {% endfor %}
-            <button type="submit">send</button>
-        </form>
-    {% endif %}
+<script type="text/javascript">
 
-    <form action="{% url 'home' %}">
-        <button>Home</button>
-    </form>
+        function picture() {
+        var pic = "{% static 'core/images/logo_loading.gif' %}"
+        document.getElementById('loading').src = pic.replace('90x90', '225x225');
+        document.getElementById('loading').style.display='block';
+        }
+
+</script>
+
+{% block content %}
+{% load get_items %}
+{% load addstr %}
+<body class="w3-metro-darken">
+<div class="w3-row">
+    <div class="w3-container" style="background-color:#30619B;height:2%"></div>
+    <div class="w3-center w3-container" style="color:#fff;background-color:#30619B">
+        <img alt="Awesome logo" src="{% static 'core/images/logo.png' %}" style="width:8%;position:center"/>
+        <form action="{% url 'home' %}">
+            <button class="my_button"><h1>Anonymisation Tool</h1></button>
+        </form>
+    </div>
+</div>
+<div class="w3-row">
+    {% if not schema %}
+    <p>The schema is invalid in the .sql file</p>
+    {% else %}
+</div>
+<div style="height:5%"></div>
+<div class="w3-row">
+    <div class="w3-row">
+        <div class="w3-col w3-container" style="width:10%"></div>
+        <div class="w3-col w3-container w3-padding-large" style="width:80%;color:#fff;background-color:#282828;">
+            <div class="w3-row">
+                <form action="{% url 'download' doc_id %}" method="post">
+                    <div class="w3-col w3-container" style="width:20%"></div>
+                    <div class="w3-col w3-container w3-padding-large" style="width:20%">
+                        <input checked class="w3-radio" id="all_db1" name="all_db" type="radio" value="1">
+                        <label for="all_db1">all the DB</label>
+                    </div>
+                    <div class="w3-col w3-container" style="width:30%"></div>
+                    <div class="w3-col w3-container w3-padding-large" style="width:20%">
+                        <input class="w3-radio" id="all_db2" name="all_db" type="radio" value="2">
+                        <label for="all_db2">all the DB except the IDs</label>
+                    </div>
+                    <button class="w3-button w3-block w3-metro-darken" type="submit" onclick="picture()">send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="w3-row">
+    <div class="w3-col w3-container" style="height:2%"></div>
+    <div class="w3-col w3-container" style="width:47%"></div>
+    <div class="w3-rest w3-container">
+        <img id="loading" src="loading" style="display:none;position:center"/>
+    </div>
+    <div class="w3-col w3-container" style="height:3%"></div>
+</div>
+<div class="w3-row">
+    <div class="w3-col w3-container" style="width:10%"></div>
+    <div class="w3-col w3-container w3-padding-large" style="width:80%;color:#fff;background-color:#282828;">
+        <div class="w3-row">
+            <form action="{% url 'download' doc_id %}" method="post">
+                <div class="w3-col w3-container" style="width:20%"></div>
+                <div class="w3-col w3-container w3-padding-large" style="width:20%">
+                    <input id="force" name="force" type="radio" value="1">
+                    <label for="force">force the anonymisation</label>
+                </div>
+                <div class="w3-col w3-container" style="width:30%"></div>
+                <div class="w3-col w3-container w3-padding-large" style="width:20%">
+                    <input checked id="noforce" name="force" type="radio" value="0">
+                    <label for="noforce">don't force the anonymisation</label>
+                </div>
+                <div style="height:2%"></div>
+                <ul class="w3-ul">
+                    {% for s in schema %}
+                    <div style="height:2%"></div>
+                    <li>
+                        <h3 class="w3-center">{{ s }}</h3>
+                        {% with table=schema|get_items:s %}
+                            {% for t in table %}
+                                {% with s|addstr:"_force" as it_t %}
+                                    <div class="w3-row">
+                                        <div class="w3-container w3-col" style="width:40%"></div>
+                                        <div class="w3-container w3-col" style="width:10%">
+                                            <label>{{ table|get_items:t }}</label>
+                                            <input name={{s}} type="checkbox" value={{table|get_items:t}} class="w3-check">
+                                        </div>
+                                        <div class="w3-container w3-col" style="width:10%">
+                                            <input class="w3-input w3-bar-items"
+                                                   placeholder="static variable" style="color:#fff;background-color:#303030"
+                                                   name={{it_t}} type="text">
+                                        </div>
+                                    </div>
+                                {% endwith %}
+                            {% endfor %}
+                        {% endwith %}
+                        <div style="height:2%"></div>
+                    </li>
+                    {% endfor %}
+                    <div style="height:2%"></div>
+                    <button class="w3-button w3-block w3-metro-darken" type="submit" onclick="picture()">send</button>
+                </ul>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+</body>
 {% endblock %}
+</html>

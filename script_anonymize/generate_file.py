@@ -37,7 +37,12 @@ def generate_file(tilt, nb_insert, type_to_change, param, new_file):
     for i in range(nb_insert):
         for nu, table in enumerate(type_to_change):
             gender = random.randint(0, 1)
-            new_file += func[table.group](nu, len_text, table, fake, gender)
+            tmp = func[table.group](nu, len_text, table, fake, gender)
+            if table.unique_ok == 1:
+                while tmp in table.unique:
+                    tmp = func[table.group](nu, len_text, table, fake, gender)
+                table.unique[tmp] = 0
+            new_file += tmp
             new_file += "," if (nu + 1) < len(type_to_change) else ""
         new_file += "),\n" if i < nb_insert - 1 else ");\n"
     return new_file + "\n"
@@ -63,7 +68,7 @@ def generate_db(type_to_change, sql_file, nb_insert, create):
     else:
         for param in type_to_change.keys():
             new_file = generate_file(tilt, nb_insert, type_to_change[param], param, new_file)
-    path = os.path.realpath(sys.argv[1])[:-4] + "_generate.sql"
+    path = os.path.realpath(sys.argv[1])[:-4] + "_generated.sql"
     with open(path, 'wb') as f:
         f.write(bytes(new_file, 'utf-8'))
         if len(type_to_change) > 1:

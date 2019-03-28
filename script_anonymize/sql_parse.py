@@ -51,21 +51,17 @@ def send_table_arg(s):
 
 
 def send_name(m, s_split):
-    if m:
-        # tester avec deux `name` `name` dans le create table
-        return m.group()[1:-1]
-    else:
-        not_ex = 0
-        if "IF NOT EXISTS" in s_split[0].upper():
-            not_ex = 1
-        tmp_s = s_split[0].split()
-        for i, tmp in enumerate(tmp_s):
-            if not_ex == 1 and tmp.upper() == "EXISTS" and i + 1 < len(tmp_s):
-                return tmp_s[i + 1] if not m else tmp_s[i + 1][1:-1]
-            elif not_ex == 0 and tmp.upper() == "TABLE" and i + 1 < len(tmp_s):
-                return tmp_s[i + 1] if not m else tmp_s[i + 1][1:-1]
-            elif not_ex == 0 and tmp.upper() == "INTO" and i + 1 < len(tmp_s):
-                return tmp_s[i + 1] if not m else tmp_s[i + 1][1:-1]
+    not_ex = 0
+    if "IF NOT EXISTS" in s_split[0].upper():
+        not_ex = 1
+    tmp_s = s_split[0].split()
+    for i, tmp in enumerate(tmp_s):
+        if not_ex == 1 and tmp.upper() == "EXISTS" and i + 1 < len(tmp_s):
+            return tmp_s[i + 1] if not m else tmp_s[i + 1][1:-1]
+        elif not_ex == 0 and tmp.upper() == "TABLE" and i + 1 < len(tmp_s):
+            return tmp_s[i + 1] if not m else tmp_s[i + 1][1:-1]
+        elif not_ex == 0 and tmp.upper() == "INTO" and i + 1 < len(tmp_s):
+            return tmp_s[i + 1] if not m else tmp_s[i + 1][1:-1]
     return ""
 
 
@@ -141,13 +137,31 @@ def clean_table(table, change):
     return new_t
 
 
+def send_schema_wid(schema):
+    change = {}
+    for s in schema.keys():
+        tmp = {}
+        for k, v in schema[s].items():
+            if v.upper() != "ID" and "_ID" not in v.upper() and "ID_" not in v.upper():
+                tmp[k] = v
+        change[s] = tmp
+    return change
+
+
 def change_to_dict(dic, schema):
     c = copy.deepcopy({k: v for k, v in schema.items() if k in dic})
-    change = copy.deepcopy(dict(c))
+    change = {}
     for k, v in c.items():
+        tmp_c = {}
         for it in v.keys():
-            if v[it] not in dic[k]:
-                del change[k][it]
+            for tmp in dic[k]:
+                static_f = len(tmp)
+                if '=' in tmp:
+                    static_f = tmp.find('=')
+                if v[it] == tmp[:static_f]:
+                    tmp_c[it] = tmp
+        if len(tmp_c) > 0:
+            change[k] = tmp_c
     return change
 
 
@@ -160,13 +174,16 @@ def send_change(schema):
     for i in range(2, len(sys.argv)):
         m = re.search(r"^(?P<s_name>.+):(?P<param>.+)$", sys.argv[i])
         if m:
+            static_f = len(m.group('param'))
+            if '=' in m.group('param'):
+                static_f = m.group('param').find('=')
             if m.group('s_name') in keys:
                 ok = 0
                 for p in param:
-                    if m.group('param') in p:
+                    if m.group('param')[:static_f] in p:
                         ok = 1
                         try:
-                            if m.group('param') not in dic[m.group('s_name')]:
+                            if m.group('param')[:static_f] not in dic[m.group('s_name')]:
                                 dic[m.group('s_name')].append(m.group('param'))
                         except KeyError:
                             dic[m.group('s_name')] = []

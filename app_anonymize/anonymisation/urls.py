@@ -5,6 +5,7 @@ from django.conf.urls.static import static
 
 from anonymisation.core import views
 
+
 app_name = 'core'
 urlpatterns = [
     url(r'^$', views.home, name='home'),

@@ -1,31 +1,101 @@
-{% extends 'base.html' %}
+<html>
 <head>
     <meta charset="utf-8">
+    <link href="https://www.w3schools.com/w3css/4/w3.css" rel="stylesheet">
+    <link href="https://www.w3schools.com/lib/w3-colors-metro.css" rel="stylesheet">
+    <link href="https://www.w3schools.com/lib/w3-colors-flat.css" rel="stylesheet">
     <title>Home</title>
 </head>
+
+{% load static %}
+
+<script type="text/javascript">
+
+        function picture() {
+        var pic = "{% static 'core/images/logo_loading.gif' %}"
+        document.getElementById('loading').src = pic.replace('90x90', '225x225');
+        document.getElementById('loading').style.display='block';
+        }
+
+</script>
+
 {% block content %}
-    <ul>
-        <li>
-            <a href="{% url 'model_form_upload' %}">.sql file to anonymize</a>
-        </li>
-    </ul>
-    <p>Uploaded files:</p>
-    <ul>
-        {% for obj in documents %}
-            <li>
-                <a href="{{ obj.document.url }}">{{ obj.document.name }}</a>
-                <form action="{% url 'display_file' obj.id %}" method="post">
-                    <button type='submit'>Anonymise data</button>
+<body class="w3-metro-darken">
+<div class="w3-row">
+    <div class="w3-container" style="background-color:#30619B;height:2%"></div>
+    <div class="w3-center w3-container" style="color:#fff;background-color:#30619B">
+        <img alt="Awesome logo" src="{% static 'core/images/logo.png' %}" style="width:8%;position:center"/>
+        <h1>Anonymisation Tool</h1>
+    </div>
+</div>
+<div class="w3-row">
+    <div class="w3-col w3-container" style="height:2%"></div>
+    <div class="w3-col w3-container" style="width:47%"></div>
+    <div class="w3-rest w3-container">
+        <img id="loading" src="loading" style="display:none;position:center"/>
+    </div>
+    <div class="w3-col w3-container" style="height:3%"></div>
+</div>
+<div class="w3-row" style="color:#fff;">
+    <div class="w3-half">
+        <div class="w3-row">
+            <div class="w3-col w3-container" style="width:10%"></div>
+            <div class="w3-col w3-container w3-padding-large" style="width:80%;color:#fff;background-color:#282828;">
+                <div class="w3-center">
+                    <h2 style="background-color:#30619B">Download Files</h2>
+                    <form action="{% url 'model_form_upload' %}" method="post">
+                        <button class="w3-button w3-block w3-metro-darken"
+                                type='submit'>.sql file to anonymize
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="w3-container" style="height:10%"></div>
+        <div class="w3-row">
+            <div class="w3-col w3-container" style="width:10%"></div>
+            <div class="w3-col w3-padding-large" style="width:80%;color:#fff;background-color:#282828;">
+                <h2 class="w3-center" style="background-color:#30619B">Destroy all files</h2>
+                <form action='destroy_file' method='get'>
+                    <button class="w3-button w3-block" style="color:#fff;background-color:#882C2B" type='submit'>DESTROY
+                        FILES
+                    </button>
                 </form>
-                <form action="{% url 'generate_file' obj.id %}" method="post">
-                    <input type="number" name="number_line" min="1">
-                    <button type='submit'>Generate data</button>
-                </form>
-            </li>
-        {% endfor %}
-    </ul>
-    <h>Destroy all files</h>
-    <form action='destroy_file' method='get'>
-        <button type='submit'>DESTROY/!\</button>
-    </form>
+            </div>
+        </div>
+        <div class="w3-col w3-container" style="width:10%"></div>
+    </div>
+    <div class="w3-half">
+        <div class="w3-row">
+            <div class="w3-col w3-container" style="width:10%"></div>
+            <div class="w3-col w3-container w3-padding-large" style="width:80%;color:#fff;background-color:#282828;">
+                <h2 class="w3-center" style="background-color:#30619B">Uploaded files</h2>
+                <ul class="w3-ul">
+                    {% for obj in documents %}
+                    <li>
+                        <a href="{{ obj.document.url }}">{{ obj.document.name }}</a>
+                        <form action="{% url 'display_file' obj.id %}" method="post">
+                            <button class="w3-button w3-block w3-metro-darken"
+                                    type='submit'>Anonymise data</button>
+                        </form>
+                        <form action="{% url 'generate_file' obj.id %}" method="post">
+                            <div class="w3-bar-block">
+                                <input class="w3-input w3-bar-item" min="1" name="number_line"
+                                       placeholder="Number of line to generate"
+                                       style="color:#fff;background-color:#303030" type="number">
+                                <button class="w3-button w3-bar-item w3-metro-darken" type='submit' onclick="picture()">
+                                Generate data</button>
+                            </div>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="w3-col w3-container" style="width:10%"></div>
+</div>
+<div class="w3-container" style="height:10%"></div>
+</body>
 {% endblock %}
+</html>

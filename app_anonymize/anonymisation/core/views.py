@@ -1,7 +1,7 @@
 from anonymisation.core.models import Document
 from anonymisation.core.forms import DocumentForm
 from anonymisation.core.scripts.anonymize import run
-from anonymisation.settings import BASE_DIR, MEDIA_ROOT
+from anonymisation.settings import BASE_DIR, MEDIA_ROOT, MEDIA_URL
 from anonymisation.core.scripts.sql_parse import send_schema
 from django.shortcuts import render, redirect, get_object_or_404
 
@@ -10,26 +10,24 @@ import re
 import time
 
 
-def q_to_dict(q):
-    return {k: v[0] if len(v) == 1 else v for k, v in q.lists()}
-
-
-def q_to_int(q):
-    d = {k: v[0] for k, v in q.lists()}
-    try:
-        if d['number_line'].isdigit():
-            return int(d['number_line'])
-        return 0
-    except KeyError:
-        return 0
-
-
 def download(request, doc_id):
     total = time.time()
-    lst_change = q_to_dict(request.POST)
     document = get_object_or_404(Document, pk=doc_id)
-    name_file, path = run(document, lst_change, 0, 0)
-    path = os.path.join(MEDIA_ROOT, path)
+    force = 0
+    all_db = 0
+    try:
+        if request.POST.get('all_db') and request.POST.get('all_db').isdigit():
+            all_db = int(request.POST.get('all_db'))
+    except KeyError:
+        all_db = 0
+        try:
+            if request.POST.get('force') and request.POST.get('force').isdigit():
+                force = int(request.POST.get('force'))
+        except KeyError:
+            force = 0
+    name_file = run(document, request, 0, 0, all_db, force)
+    path = os.path.join(MEDIA_URL, "anonymized_files/")
+    path = os.path.join(path, name_file)
     return render(request, 'core/download.html', {
         'name': name_file,
         'file_url': path,
@@ -40,10 +38,18 @@ def download(request, doc_id):
 def generate_file(request, doc_id):
     if request.method == 'POST':
         total = time.time()
-        nb_insert = q_to_int(request.POST)
         document = get_object_or_404(Document, pk=doc_id)
-        name_file, path = run(document, [], 1, nb_insert)
-        path = os.path.join(MEDIA_ROOT, path)
+        nb_insert = 0
+        try:
+            if request.POST.get('number_line') and request.POST.get('number_line').isdigit():
+                nb_insert = int(request.POST.get('number_line'))
+        except KeyError:
+            return home(request)
+        if nb_insert < 1:
+            return home(request)
+        name_file = run(document, None, 1, nb_insert, 0, 0)
+        path = os.path.join(MEDIA_URL, "generated_files/")
+        path = os.path.join(path, name_file)
         return render(request, 'core/generate_file.html', {
             'name': name_file,
             'file_url': path,
@@ -77,7 +83,7 @@ def display_file(request, doc_id):
 
 
 def destroy_file(request):
-    fold = {'/documents/', '/generated_files/', '/anonymised_files/'}
+    fold = {'/documents/', '/generated_files/', '/anonymized_files/'}
     for f in fold:
         try:
             files = os.listdir(MEDIA_ROOT + f)
