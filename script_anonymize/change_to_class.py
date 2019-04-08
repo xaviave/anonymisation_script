@@ -3,6 +3,11 @@ import sys
 
 
 class TableSpec:
+    """
+
+        Custom class with all the information needed to create or anonymize data
+
+    """
     def __init__(self, index, table, name, group, typ, precision, scale, static_var):
         self.index = int(index)
         self.table = table
@@ -35,6 +40,11 @@ class TableSpec:
         return self
 
     def fill_enum(self, s):
+        """
+
+            fill a list of the enum from a table and handled error and the -f option
+
+        """
         line = ""
         for i, tmp in enumerate(s):
             if i != 0:
@@ -64,6 +74,11 @@ class TableSpec:
         return self.fill_param(s)
 
     def print_table(self):
+        """
+
+                Debug aff
+
+        """
         print("\ntable \n| index : " + str(self.index))
         print("| table : " + str(self.table))
         print("| name: " + str(self.name))
@@ -80,16 +95,17 @@ class TableSpec:
 def var_type(str_s):
     """
 
-        pas encore : BINARY | VARBINARY | BLOB | TINYBLOB | MEDIUMBLOB | SET | SERIAL
+        missing those types : BINARY | VARBINARY | BLOB | TINYBLOB | MEDIUMBLOB | SET | SERIAL
                      POLYGON | PATH | POINT | MONEY | MACADDR | LSEG | LINE | BYTEA | CIRCLE |
 
+        return the right type and the class of this one
 
     """
 
     var_int = {'int': ['bool', 'tinyint', 'smallint', 'mediumint', 'bigint', 'int']}
     var_dec = {'dec': ['decimal', 'numeric', 'float', 'real', 'double']}
     var_char = {'char': ['tinytext', 'mediumtext', 'longtext', 'text', 'varchar', 'char']}
-    var_time = {'date': ['date', 'datetime', 'time', 'timestamp', 'year']}
+    var_time = {'date': ['datetime', 'date', 'timestamp', 'time', 'year']}
     var_enum = {'enum': ['enum']}
 
     var = [var_int, var_char, var_dec, var_time, var_enum]
@@ -104,6 +120,16 @@ def var_type(str_s):
 
 
 def fill_spec(index, table, name, static_var, str_s, spec):
+    """
+
+    send the right info to TableSpec and handle error
+
+    :param static_var: exist if their's a static parameter in the option of the column
+    :param str_s: every paramter of the column
+    :param spec: list of the name of the table, handle duplicate name
+    :return:
+
+    """
     if len(spec) > 0:
         for n in range(0, len(spec)):
             if spec[n] and len(str_s) > 1:
@@ -124,7 +150,7 @@ def fill_spec(index, table, name, static_var, str_s, spec):
     preci = str_s[1][str_s[1].find('('):str_s[1].find(')')]
     if not preci:
         if len(str_s) > 2:
-            preci = 1
+            preci = 25
             if "NOT NULL" not in str_s[2]:
                 preci = 1
             tmp = TableSpec(index, table, name, group, v_t, preci, 0, static_var[1:])
@@ -173,6 +199,11 @@ def clean_type(type_to_change):
 
 
 def text_split_1(text):
+    """
+
+        do a custom split for the char : ',' and with all the brackets, braces, parentheses, (double-)quotes close
+
+    """
     lst = []
     if "," not in text and "\n" not in text:
         lst.append(text)

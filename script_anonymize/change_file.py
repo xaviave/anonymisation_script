@@ -102,15 +102,15 @@ def change_time(pos, length, param, fake, gender):
     elif "MONTH" in param.name.upper():
         var = fake.month()
     elif "DAY" in param.name.upper():
-        var = fake.day()
-    elif "SMALLDATETIME" == param.name.upper():
+        var = fake.day_of_week()
+    elif "smalldatetime" == param.type:
         var = fake.date(pattern="%Y-%m-%d", end_datetime=None) + " " + fake.time(pattern="%H:%M:%S",
                                                                                  end_datetime=None)
-    elif "DATETIME" == param.name.upper():
+    elif "datetime" == param.type:
         var = fake.date(pattern="%Y-%m-%d", end_datetime=None) + " " + fake.time(pattern="%H:%M:%S",
                                                                                  end_datetime=None) + "." + str(
             random.randint(0, 999))
-    elif "TIME" in param.name.upper():
+    elif "time" == param.type:
         var = fake.time(pattern="%H:%M:%S", end_datetime=None) + "." + str(random.randint(0, 999))
     else:
         var = fake.date(pattern="%Y-%m-%d", end_datetime=None)
@@ -172,6 +172,11 @@ def text_split(text):
 
 
 def check_gender(type_to_change, text):
+    """
+
+        send the right gender else random gender
+
+    """
     for change in type_to_change:
         if "GENDER" in change.name.upper() or "SEX" in change.name.upper():
             if change.static_var.upper() == "F" or "FEMALE" in change.static_var.upper():
@@ -186,6 +191,16 @@ def check_gender(type_to_change, text):
 
 
 def change_param(len_i, len_tot, text, type_to_change, fake):
+    """
+
+        change line by line the right parameter of the columns'table
+
+        :param len_i: which line the script is
+        :param len_tot: total length of the insert block
+        :param type_to_change: class of the rigth column to change, every info inside
+        :param fake: generator of random and coherent data
+
+    """
     func = {'char': change_char, 'int': change_int, 'dec': change_dec, 'date': change_time, 'enum': change_enum,
             'error': handle_error}
     n_text = text_split(text)
@@ -210,6 +225,11 @@ def change_param(len_i, len_tot, text, type_to_change, fake):
 
 
 def text_to_change(s, type_to_change, fake, insert):
+    """
+
+        send the change insert block after the anonymisation or the unchanged table block
+
+    """
     new_file = ""
     sql = s.split('\n')
     for i, s in enumerate(sql):
@@ -229,6 +249,15 @@ def text_to_change(s, type_to_change, fake, insert):
 
 
 def change_file(type_to_change, sql_file, insert):
+    """
+
+        Create the anonymize file
+
+        :param type_to_change: list of column to change
+        :param sql_file: the original sql file
+        :param insert: re.compile(r"(search|SEARCH)")
+
+    """
     new_file = ""
     fake = Faker('fr_FR')
     pbar = progressbar.ProgressBar(maxval=len(sql_file))
