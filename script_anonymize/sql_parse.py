@@ -128,13 +128,15 @@ def send_schema(create, insert):
 
 def clean_table(table, change):
     new_t = {}
+    table_row = {}
     for t in table:
         tmp = send_table_arg(t)
         for c in change.keys():
             s_split = t.split("(", 1)
             if c == send_name(re.search(r"`(.)+`", s_split[0]), s_split):
                 new_t[c] = tmp
-    return new_t
+                table_row[c] = t
+    return new_t, table_row
 
 
 def send_schema_wid(schema):

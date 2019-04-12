@@ -102,15 +102,15 @@ def change_time(pos, length, param, fake, gender):
     elif "MONTH" in param.name.upper():
         var = fake.month()
     elif "DAY" in param.name.upper():
-        var = fake.day()
-    elif "SMALLDATETIME" == param.name.upper():
+        var = fake.day_of_week()
+    elif "smalldatetime" == param.type:
         var = fake.date(pattern="%Y-%m-%d", end_datetime=None) + " " + fake.time(pattern="%H:%M:%S",
                                                                                  end_datetime=None)
-    elif "DATETIME" == param.name.upper():
+    elif "datetime" == param.type:
         var = fake.date(pattern="%Y-%m-%d", end_datetime=None) + " " + fake.time(pattern="%H:%M:%S",
                                                                                  end_datetime=None) + "." + str(
             random.randint(0, 999))
-    elif "TIME" in param.name.upper():
+    elif "time" == param.type:
         var = fake.time(pattern="%H:%M:%S", end_datetime=None) + "." + str(random.randint(0, 999))
     else:
         var = fake.date(pattern="%Y-%m-%d", end_datetime=None)

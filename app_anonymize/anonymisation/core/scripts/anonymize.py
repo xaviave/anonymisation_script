@@ -51,7 +51,7 @@ def run(document, request, type_change, nb_insert, all_db, force):
     name_file = document.document.name
     create = re.compile(r"(create|CREATE)(\s)+(table|TABLE)")
     insert = re.compile(r"(insert|INSERT)(\s)+(into|INTO)")
-    schema, sql_file, table = send_schema(document, create, insert)
+    schema, sql_file, table_row = send_schema(document, create, insert)
     if type_change == 0:
         lst_change = q_to_dict(request, schema)
     if schema:
@@ -62,10 +62,10 @@ def run(document, request, type_change, nb_insert, all_db, force):
             change = send_schema_wid(schema)
         else:
             change = send_change(schema, dict_to_list(lst_change))
-        table = clean_table(table, change)
+        table, table_row = clean_table(table_row, change)
         print("func: send change = " + str(time.time() - start))
         if change:
-            type_to_change = prepare_change(change, table, force)
+            type_to_change = prepare_change(change, table, force, table_row)
             name_file = name_file[name_file.find('/') + 1:name_file.find('.')]
             if type_change == 0:
                 name_file += "_anonymized.sql"

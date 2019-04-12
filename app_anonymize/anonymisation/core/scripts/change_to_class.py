@@ -1,5 +1,6 @@
-import time
 import re
+
+import time
 
 
 class TableSpec:
@@ -18,19 +19,19 @@ class TableSpec:
         self.unique_ok = 0
         self.unique = {}
 
-    def init_increment(self):
+    def init_increment(self, a_int):
         if "AUTO_INCREMENT" in self.params.upper():
-            self.auto_increment = 0
+            self.auto_increment = a_int if a_int > 0 else 0
 
     def init_unique(self):
         if "UNIQUE" in self.params.upper() and not self.static_var:
             self.unique_ok = 1
 
-    def fill_param(self, s):
+    def fill_param(self, s, a_int):
         if len(s) > 2:
             self.params = s[2]
         if self.params:
-            self.init_increment()
+            self.init_increment(a_int)
             self.init_unique()
         return self
 
@@ -80,7 +81,7 @@ class TableSpec:
 def var_type(str_s):
     """
 
-        pas encore : BINARY | VARBINARY | BLOB | TINYBLOB | MEDIUMBLOB | SET | SERIAL
+        missing those types : BINARY | VARBINARY | BLOB | TINYBLOB | MEDIUMBLOB | SET | SERIAL
                      POLYGON | PATH | POINT | MONEY | MACADDR | LSEG | LINE | BYTEA | CIRCLE |
 
 
@@ -89,7 +90,7 @@ def var_type(str_s):
     var_int = {'int': ['bool', 'tinyint', 'smallint', 'mediumint', 'bigint', 'int']}
     var_dec = {'dec': ['decimal', 'numeric', 'float', 'real', 'double']}
     var_char = {'char': ['tinytext', 'mediumtext', 'longtext', 'text', 'varchar', 'char']}
-    var_time = {'date': ['date', 'datetime', 'time', 'timestamp', 'year']}
+    var_time = {'date': ['datetime', 'date', 'timestamp', 'time', 'year']}
     var_enum = {'enum': ['enum']}
 
     var = [var_int, var_char, var_dec, var_time, var_enum]
@@ -103,36 +104,36 @@ def var_type(str_s):
     return "error", "error"
 
 
-def fill_spec(index, table, name, static_var, str_s, spec, force):
+def fill_spec(index, table, name, static_var, str_s, spec, force, a_int):
     if len(spec) > 0:
         for n in range(0, len(spec)):
             if spec[n] and len(str_s) > 1:
                 if spec[n].name == name or str_s[0] == "KEY" or str_s[1] == "KEY" \
                         or str_s[0] == "CONSTRAINT" or str_s[1] == "CONSTRAINT":
                     tmp = TableSpec(0, "error", "", "error", "", 0, 0, "")
-                    return tmp.fill_param(str_s)
+                    return tmp.fill_param(str_s, a_int)
     group, v_t = var_type(str_s[1].lower())
     if group == "error":
         tmp = TableSpec(0, "error", "", "error", "", 0, 0, "")
-        return tmp.fill_param(str_s)
+        return tmp.fill_param(str_s, a_int)
     if group == "enum":
         tmp = TableSpec(index, table, name, group, v_t, 0, 0, static_var[1:])
         return tmp.fill_enum(str_s, force)
     if group == "date":
         tmp = TableSpec(index, table, name, group, v_t, 0, 0, static_var[1:])
-        return tmp.fill_param(str_s)
+        return tmp.fill_param(str_s, a_int)
     preci = str_s[1][str_s[1].find('('):str_s[1].find(')')]
     if not preci:
         if len(str_s) > 2:
-            preci = 1
+            preci = 25
             if "NOT NULL" not in str_s[2]:
                 preci = 1
             tmp = TableSpec(index, table, name, group, v_t, preci, 0, static_var[1:])
-            return tmp.fill_param(str_s)
+            return tmp.fill_param(str_s, a_int)
         else:
             preci = 9 if group == "int" or group == "dec" else 255
             tmp = TableSpec(index, table, name, group, v_t, preci, 0, static_var[1:])
-            return tmp.fill_param(str_s)
+            return tmp.fill_param(str_s, a_int)
     scale = 0
     if group == "dec":
         preci = str_s[1][str_s[1].find('('):str_s[1].find(',')]
@@ -140,10 +141,10 @@ def fill_spec(index, table, name, static_var, str_s, spec, force):
     if not static_var[1:].isdigit() and (group == 'dec' or group == 'int') and force == 0:
         static_var = "="
     tmp = TableSpec(index, table, name, group, v_t, int(preci[1:]), int(scale), static_var[1:])
-    return tmp.fill_param(str_s)
+    return tmp.fill_param(str_s, a_int)
 
 
-def send_change_class(t, change, table, force):
+def send_change_class(t, change, table, force, a_int):
     li = []
     for c in change.keys():
         for line in t:
@@ -155,7 +156,8 @@ def send_change_class(t, change, table, force):
                 pattern = re.compile(r'\s+')
                 line = re.sub(pattern, ' ', line)
                 li.append(
-                    fill_spec(c, table, change[c][:static_f], change[c][static_f:], line.split(' ', 2), li, force))
+                    fill_spec(c, table, change[c][:static_f], change[c][static_f:], line.split(' ', 2), li, force,
+                              a_int))
                 break
     return li
 
@@ -178,7 +180,6 @@ def text_split_1(text):
     if "," not in text and "\n" not in text:
         lst.append(text)
         return lst
-    i = 0
     tmp = 0
     save = 0
     tmp_2 = 0
@@ -200,13 +201,35 @@ def text_split_1(text):
     return lst
 
 
-def prepare_change(change, table, force):
+def send_a_int(table):
+    i = 0
+    tmp = 0
+    nb_line = 0
+    for i in range(len(table)):
+        if table[i] == "\n":
+            nb_line += 1
+        if table[i] == "(":
+            tmp += 1
+        elif table[i] == ")":
+            tmp -= 1
+        if tmp == 0 and nb_line > 1:
+            break
+    m = re.search(r"AUTO_INCREMENT=(?P<a_int>[^( |;)]+)", table)
+    if m:
+        if m.group("a_int").isdigit():
+            print(m.group("a_int"))
+            return int(m.group("a_int")) - 1
+    return -1
+
+
+def prepare_change(change, table, force, table_row):
     start = time.time()
     type_to_change = {}
     for c in change.keys():
         for t in table.keys():
             if c == t:
-                type_to_change[c] = send_change_class(text_split_1(table[t]), change[c], c, force)
+                type_to_change[c] = send_change_class(text_split_1(table[t]), change[c], c, force,
+                                                      send_a_int(table_row[t]))
                 break
     print("func: prepare_change = " + str(time.time() - start))
     return clean_type(type_to_change)

@@ -49,10 +49,9 @@ def send_option():
         else:
             usage()
     elif "-a" in sys.argv:
+        all_db = 1
         if "-id" in sys.argv:
             all_db = 2
-        else:
-            all_db = 1
     return nb, all_db
 
 
@@ -65,7 +64,7 @@ if __name__ == "__main__":
     nb_insert, all_db = send_option()
     create = re.compile(r"(create|CREATE)(\s)+(table|TABLE)")
     insert = re.compile(r"(insert|INSERT)(\s)+(into|INTO)")
-    schema, sql_file, table = send_schema(create, insert)
+    schema, sql_file, table_row = send_schema(create, insert)
     if schema:
         if nb_insert > 0 or all_db == 1:
             change = dict(schema)
@@ -73,9 +72,9 @@ if __name__ == "__main__":
             change = send_schema_wid(schema)
         else:
             change = send_change(schema)
-        table = clean_table(table, change)
+        table, table_row = clean_table(table_row, change)
         if change:
-            type_to_change = prepare_change(change, table)
+            type_to_change = prepare_change(change, table, table_row)
             if nb_insert > 0:
                 generate_db(type_to_change, sql_file, nb_insert, create)
             else:
